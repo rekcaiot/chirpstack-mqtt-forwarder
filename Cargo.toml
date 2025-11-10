@@ -27,7 +27,7 @@
   simple_logger = { version = "5.0", default-features = false, features = [
     "timestamps",
   ] }
-  syslog = "7.0"
+  syslog = "=6.1.0"
   anyhow = "1.0"
   toml = { version = "0.9", default-features = false, features = [
     "std",

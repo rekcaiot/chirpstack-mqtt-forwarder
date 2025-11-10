@@ -1,10 +1,39 @@
+#[cfg(windows)]
+mod signal {
+    pub struct Signals;
+
+    impl Signals {
+        pub fn new(_: &[i32]) -> Result<Self, ()> {
+            Ok(Signals)
+        }
+
+        pub fn into_iter(self) -> std::vec::IntoIter<i32> {
+            Vec::new().into_iter()
+        }
+
+        pub fn forever(self) -> std::vec::IntoIter<i32> {
+            Vec::new().into_iter()
+        }
+    }
+
+    pub const SIGINT: i32 = 2;
+    pub const SIGTERM: i32 = 15;
+}
+
+#[cfg(not(windows))]
+use signal_hook::{consts::SIGINT, consts::SIGTERM, iterator::Signals};
+
+#[cfg(windows)]
+use self::signal::{SIGINT, SIGTERM, Signals};
+
+
 use std::process;
 use std::str::FromStr;
 use std::time::Duration;
 
 use clap::{Parser, Subcommand};
 use log::info;
-use signal_hook::{consts::SIGINT, consts::SIGTERM, iterator::Signals};
+//use signal_hook::{consts::SIGINT, consts::SIGTERM, iterator::Signals};
 use tokio::time::sleep;
 
 use chirpstack_mqtt_forwarder::{backend, cmd, commands, config, logging, metadata, mqtt};
@@ -59,6 +88,6 @@ async fn main() {
     backend::setup(&config).await.expect("Setup backend error");
     mqtt::setup(&config).await.expect("Setup MQTT client error");
 
-    let mut signals = Signals::new([SIGINT, SIGTERM]).unwrap();
+    let mut signals = Signals::new(&[SIGINT, SIGTERM]).unwrap();
     signals.forever().next();
 }
