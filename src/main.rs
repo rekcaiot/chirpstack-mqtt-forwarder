@@ -7,6 +7,7 @@ mod signal {
             Ok(Signals)
         }
 
+        #[allow(dead_code)]
         pub fn into_iter(self) -> std::vec::IntoIter<i32> {
             Vec::new().into_iter()
         }
@@ -88,6 +89,6 @@ async fn main() {
     backend::setup(&config).await.expect("Setup backend error");
     mqtt::setup(&config).await.expect("Setup MQTT client error");
 
-    let mut signals = Signals::new(&[SIGINT, SIGTERM]).unwrap();
+    let signals = Signals::new(&[SIGINT, SIGTERM]).unwrap();
     signals.forever().next();
 }
