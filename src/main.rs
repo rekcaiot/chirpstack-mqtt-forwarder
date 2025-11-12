@@ -1,32 +1,5 @@
-#[cfg(windows)]
-mod signal {
-    pub struct Signals;
-
-    impl Signals {
-        pub fn new(_: &[i32]) -> Result<Self, ()> {
-            Ok(Signals)
-        }
-
-        #[allow(dead_code)]
-        pub fn into_iter(self) -> std::vec::IntoIter<i32> {
-            Vec::new().into_iter()
-        }
-
-        pub fn forever(self) -> std::vec::IntoIter<i32> {
-            Vec::new().into_iter()
-        }
-    }
-
-    pub const SIGINT: i32 = 2;
-    pub const SIGTERM: i32 = 15;
-}
-
 #[cfg(not(windows))]
 use signal_hook::{consts::SIGINT, consts::SIGTERM, iterator::Signals};
-
-#[cfg(windows)]
-use self::signal::{SIGINT, SIGTERM, Signals};
-
 
 use std::process;
 use std::str::FromStr;
@@ -38,6 +11,8 @@ use log::info;
 use tokio::time::sleep;
 
 use chirpstack_mqtt_forwarder::{backend, cmd, commands, config, logging, metadata, mqtt};
+
+use log::{debug};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -89,6 +64,18 @@ async fn main() {
     backend::setup(&config).await.expect("Setup backend error");
     mqtt::setup(&config).await.expect("Setup MQTT client error");
 
-    let signals = Signals::new(&[SIGINT, SIGTERM]).unwrap();
-    signals.forever().next();
+    // Wait for termination signal.
+    // On Unix use signal-hook to wait for SIGINT / SIGTERM.
+    #[cfg(not(windows))]
+    {
+        let signals = Signals::new(&[SIGINT, SIGTERM]).unwrap();
+        // Block until a signal arrives
+        signals.forever().next();
+    }
+    // On Windows use tokio::signal::ctrl_c (requires "signal" feature for tokio)
+    #[cfg(windows)]
+    {
+        tokio::signal::ctrl_c().await.expect("failed to listen for ctrl_c");
+    }
+    debug!("Shutdown signal received, exiting");
 }

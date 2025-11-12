@@ -53,6 +53,7 @@
     "io-util",
     "sync",
     "time",
+    "signal",
   ] }
   async-trait = "0.1"
   zmq = { version = "0.10", optional = true }
