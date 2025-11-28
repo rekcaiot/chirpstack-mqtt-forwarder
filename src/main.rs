@@ -78,4 +78,5 @@ async fn main() {
         tokio::signal::ctrl_c().await.expect("failed to listen for ctrl_c");
     }
     debug!("Shutdown signal received, exiting");
+    process::exit(0);
 }
